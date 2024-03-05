@@ -1,0 +1,76 @@
+
+import random
+
+def generate_chromosome():
+    value = random.randint(0, 255)
+    sign = random.randint(0, 1)
+    half = random.randint(0, 1)
+    chromosome = (sign << 9) | (value << 1) | half
+    return chromosome
+
+def decode_chromosome(chromosome):
+    sign = (chromosome >> 9) & 1
+    value = (chromosome >> 1) & 255
+    half = chromosome & 1
+    decimal = -value if sign else value
+    decimal += 0.5 if half else 0
+    return decimal
+
+def calculate_result(formula, x):
+    if formula == 1:
+        return -30 * x**2 - 23 * x + 5
+    elif formula == 2:
+        return ((2*x + 3)**2) * 3*x
+
+n = random.randint(1, 5)
+num_chromosomes = 2**n
+chromosomes = [generate_chromosome() for _ in range(num_chromosomes)]
+
+print(f'Se generaron {num_chromosomes} cromosomas.')
+
+print('Por favor, elige una de las siguientes fórmulas:')
+print('1: -30x^2 - 23x + 5')
+print('2: (2x + 3)^2 * 3x')
+formula = int(input('Introduce 1 para la primera fórmula, o 2 para la segunda fórmula: '))
+
+num_iterations = int(input('Por favor, introduce el número de veces que se repetirá el ciclo: '))
+
+for iteration in range(num_iterations):
+    print(f'\nIteración {iteration+1} de {num_iterations}:')
+
+    results = []
+    for i in range(num_chromosomes):
+        result = calculate_result(formula, decode_chromosome(chromosomes[i]))
+        results.append(result)
+        print(f'Cromosoma {i+1} binario: {bin(chromosomes[i])[2:].zfill(10)}, Cromosoma decimal: {decode_chromosome(chromosomes[i])}, Resultado: {result}')
+
+    average_result = sum(results) / len(results)
+    print(f'\nPromedio de los resultados: {average_result}')
+
+    indices = list(range(num_chromosomes))
+    random.shuffle(indices)
+    for i in range(0, num_chromosomes, 2):
+        split_point = random.randint(1, 9)
+        mask = (1 << split_point) - 1
+        part1_chromosome1 = chromosomes[indices[i]] & mask
+        part2_chromosome1 = chromosomes[indices[i]] & ~mask
+        part1_chromosome2 = chromosomes[indices[i+1]] & mask
+        part2_chromosome2 = chromosomes[indices[i+1]] & ~mask
+        chromosomes[indices[i]] = part2_chromosome1 | part1_chromosome2
+        chromosomes[indices[i+1]] = part2_chromosome2 | part1_chromosome1
+        print(f'\nIntercambio entre el cromosoma {indices[i]+1} y el cromosoma {indices[i+1]+1} en el bit {split_point+1}. Los bits intercambiados son: {bin(mask)[2:].zfill(10)}')
+
+    selected_chromosome_index = random.randint(0, num_chromosomes - 1)
+    bit_to_change = 1 << random.randint(0, 9)
+    chromosomes[selected_chromosome_index] ^= bit_to_change
+    print(f'\nSe seleccionó el cromosoma {selected_chromosome_index+1} y se cambió el bit {bin(bit_to_change)[2:].zfill(10)}.\n')
+
+    # Imprimir los cromosomas y sus resultados al final del ciclo
+    print('Cromosomas y resultados al final del ciclo:')
+    results = []
+    for i in range(num_chromosomes):
+        result = calculate_result(formula, decode_chromosome(chromosomes[i]))
+        results.append(result)
+        print(f'Cromosoma {i+1} binario: {bin(chromosomes[i])[2:].zfill(10)}, Cromosoma decimal: {decode_chromosome(chromosomes[i])}, Resultado: {result}')
+    average_result = sum(results) / len(results)
+    print(f'\nPromedio de los resultados al final del ciclo: {average_result}')
