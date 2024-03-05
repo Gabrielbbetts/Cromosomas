@@ -1,0 +1,70 @@
+ 
+import random
+
+def generate_chromosome():
+    # Generar un número aleatorio de 8 bits (para el valor absoluto del cromosoma)
+    value = random.randint(0, 255)
+    # Decidir aleatoriamente el signo y si se añade 0.5
+    sign = random.randint(0, 1)
+    half = random.randint(0, 1)
+    # Crear el cromosoma como un número de 10 bits
+    chromosome = (sign << 9) | (value << 1) | half
+    return chromosome
+
+def decode_chromosome(chromosome):
+    # Extraer el signo, el valor y el bit de 0.5 del cromosoma
+    sign = (chromosome >> 9) & 1
+    value = (chromosome >> 1) & 255
+    half = chromosome & 1
+    # Calcular el valor decimal del cromosoma
+    decimal = -value if sign else value
+    decimal += 0.5 if half else 0
+    return decimal
+
+# Generar un número aleatorio de cromosomas basado en la función 2^n
+n = random.randint(1, 5)
+num_chromosomes = 2**n
+chromosomes = [generate_chromosome() for _ in range(num_chromosomes)]
+
+# Imprimir la cantidad de cromosomas generados
+print(f'Se generaron {num_chromosomes} cromosomas.')
+
+# Pedir al usuario el número de veces que se repetirá el ciclo
+num_iterations = int(input('Por favor, introduce el número de veces que se repetirá el ciclo: '))
+
+for iteration in range(num_iterations):
+    print(f'\nIteración {iteration+1} de {num_iterations}:')
+
+    # Mostrar todos los cromosomas y sus resultados antes del intercambio
+    print('\nCromosomas y resultados antes del intercambio:')
+    results = []
+    for i in range(num_chromosomes):
+        result = -30 * decode_chromosome(chromosomes[i])**2 - 23 * decode_chromosome(chromosomes[i]) + 5
+        results.append(result)
+        print(f'Cromosoma {i+1} binario: {bin(chromosomes[i])[2:].zfill(10)}, Cromosoma decimal: {decode_chromosome(chromosomes[i])}, Resultado: {result} 🧬👶🧬👶')
+
+    # Calcular e imprimir el promedio de los resultados
+    average_result = sum(results) / len(results)
+    print(f'\nPromedio de los resultados: {average_result}')
+
+    # Pasar pares de cromosomas de manera aleatoria por una compuerta XOR
+    indices = list(range(num_chromosomes))
+    random.shuffle(indices)
+    for i in range(0, num_chromosomes, 2):
+        # Partir cada cromosoma de manera aleatoria
+        split_point = random.randint(1, 9)
+        mask = (1 << split_point) - 1
+        part1_chromosome1 = chromosomes[indices[i]] & mask
+        part2_chromosome1 = chromosomes[indices[i]] & ~mask
+        part1_chromosome2 = chromosomes[indices[i+1]] & mask
+        part2_chromosome2 = chromosomes[indices[i+1]] & ~mask
+        # Intercambiar las secciones entre los dos cromosomas
+        chromosomes[indices[i]] = part2_chromosome1 | part1_chromosome2
+        chromosomes[indices[i+1]] = part2_chromosome2 | part1_chromosome1
+        print(f'\nIntercambio entre el cromosoma {indices[i]+1} y el cromosoma {indices[i+1]+1} en el bit {split_point+1}. Los bits intercambiados son: {bin(mask)[2:].zfill(10)}')
+
+    # Seleccionar un cromosoma de manera aleatoria y cambiar un bit de manera aleatoria
+    selected_chromosome_index = random.randint(0, num_chromosomes - 1)
+    bit_to_change = 1 << random.randint(0, 9)
+    chromosomes[selected_chromosome_index] ^= bit_to_change
+    print(f'\nSe seleccionó el cromosoma {selected_chromosome_index+1} y se cambió el bit {bin(bit_to_change)[2:].zfill(10)}.\n')
